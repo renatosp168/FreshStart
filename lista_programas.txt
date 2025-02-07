@@ -1,0 +1,4 @@
+googlechrome|admin
+vscode|xpto
+7zip|admin
+git|xpto

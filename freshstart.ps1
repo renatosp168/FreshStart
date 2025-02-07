@@ -11,11 +11,32 @@ if (-not $userExists) {
     Write-Output "Utilizador $userName já existe. Passando à frente..."
 }
 
-# 2. Instalar/atualizar programas usando Chocolatey
-$chocoProgramsFile = "C:\caminho\para\lista_programas.txt"  # Substitua pelo caminho do ficheiro com a lista de programas
+# Função para instalar ou atualizar um pacote no contexto de um utilizador específico
+function Install-ChocoPackage {
+    param (
+        [string]$package,
+        [string]$username
+    )
+
+    Write-Output "Instalando/atualizando $package para o utilizador $username..."
+
+    # Executa o comando Chocolatey no contexto do utilizador especificado
+    $process = Start-Process -FilePath "choco" -ArgumentList "install $package -y --no-progress --limit-output" -Credential (Get-Credential -UserName $username -Message "Insira a senha para o utilizador $username") -NoNewWindow -Wait -PassThru
+
+    if ($process.ExitCode -eq 0) {
+        Write-Output "$package instalado/atualizado com sucesso para $username."
+        return $true
+    } else {
+        Write-Output "Falha ao instalar/atualizar $package para $username."
+        return $false
+    }
+}
+
+# 1. Ler o ficheiro de configuração
+$chocoProgramsFile = "C:\caminho\para\lista_programas.txt"  # Substitua pelo caminho do ficheiro
 $chocoPrograms = Get-Content -Path $chocoProgramsFile -ErrorAction Stop
 
-# Verifica se o Chocolatey está instalado
+# 2. Verificar se o Chocolatey está instalado
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Write-Output "Instalando Chocolatey..."
     Set-ExecutionPolicy Bypass -Scope Process -Force -ErrorAction SilentlyContinue | Out-Null
@@ -23,31 +44,48 @@ if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')) | Out-Null
 }
 
+# 3. Processar cada linha do ficheiro
 $updatedPrograms = @()
 $failedPrograms = @()
 
-foreach ($program in $chocoPrograms) {
-    Write-Output "Processando $program..."
+foreach ($line in $chocoPrograms) {
+    $package, $username = $line -split '\|'  # Divide a linha no delimitador
+
+    if (-not $package -or -not $username) {
+        Write-Output "Formato inválido na linha: $line"
+        continue
+    }
+
+    Write-Output "Processando $package para o utilizador $username..."
+
     try {
-        # Verifica se o programa já está instalado
-        $installed = choco list --local-only $program --exact --limit-output --no-progress -r
+        # Verifica se o pacote já está instalado
+        $installed = choco list --local-only $package --exact --limit-output --no-progress -r
         if ($installed) {
-            Write-Output "$program já está instalado. Atualizando..."
-            choco upgrade $program -y --no-progress --limit-output | Out-Null
+            Write-Output "$package já está instalado. Atualizando..."
         } else {
-            Write-Output "$program não está instalado. Instalando..."
-            choco install $program -y --no-progress --limit-output | Out-Null
+            Write-Output "$package não está instalado. Instalando..."
         }
-        $updatedPrograms += $program
+
+        # Instala/atualiza o pacote no contexto do utilizador
+        if (Install-ChocoPackage -package $package -username $username) {
+            $updatedPrograms += "$package ($username)"
+        } else {
+            $failedPrograms += "$package ($username)"
+        }
     } catch {
-        Write-Output "Falha ao processar $program."
-        $failedPrograms += $program
+        Write-Output "Erro ao processar $package para $username."
+        $failedPrograms += "$package ($username)"
     }
 }
 
-# 3. Mostrar programas atualizados e falhados
+# 4. Mostrar programas atualizados e falhados
 Write-Output "Programas atualizados: $($updatedPrograms -join ', ')"
 Write-Output "Programas que falharam: $($failedPrograms -join ', ')"
+
+# 5. Aguarda input do utilizador antes de terminar
+Write-Output "Pressione Enter para sair..."
+$null = Read-Host
 
 # 4. Configurar pasta do Git e fazer push de um repositório
 $repoPath = "C:\caminho\para\repositorio"  # Substitua pelo caminho do repositório
