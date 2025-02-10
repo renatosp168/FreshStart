@@ -3,8 +3,13 @@
 . ./ChocoService.ps1
 . ./GitService.ps1
 
+param(
+    [Parameter(Mandatory = $false)] # Opcional
+    [string]$ConfigurationFolder = "./Configurations/default.conf" 
+)
+
 # 1. load general configurations
-$configurations = Read-Configurations -configFilePath "./Configurations/default.conf"
+$configurations = Read-Configurations -configFilePath $ConfigurationFolder
 
 # 2. load User configuration
 try{
