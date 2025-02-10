@@ -1,4 +1,4 @@
-function Check-Choco {
+function Read-Choco {
      if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
         return $false
      }

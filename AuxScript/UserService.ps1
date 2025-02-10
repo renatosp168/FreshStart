@@ -3,7 +3,8 @@ function Create-User {
         [string]$username,
         [string]$password,
         [string]$name,
-        [string]$description
+        [string]$description,
+        [string]$admin
     )
     
     $userExists = Get-LocalUser -Name $userName -ErrorAction SilentlyContinue
@@ -12,12 +13,17 @@ function Create-User {
         Write-Output "Criando utilizador $userName..."
         New-LocalUser -Name $userName -Password (ConvertTo-SecureString $password -AsPlainText -Force) -FullName $name -Description $description -ErrorAction SilentlyContinue | Out-Null
         Write-Output "Utilizador $userName criado."
+        
+        if($admin -eq 'true'){
+            Write-Admin -username $username
+        }
+
     } else {
         Write-Output "Utilizador $userName já existe. Passando à frente..."
     }
 }
 
-function Make-Admin{
+function Write-Admin{
     param (
         [string] $username
     )
