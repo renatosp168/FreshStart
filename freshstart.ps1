@@ -4,27 +4,23 @@
 . ./GitService.ps1
 
 # 1. load general configurations
-$configurations = Read-Configurations -configFilePath "./default.conf"
+$configurations = Read-Configurations -configFilePath "./Configurations/default.conf"
 
 # 2. load User configuration
 try{
     $usersInfo = Read-Configurations -configFilePath $configurations['userConfigurationFile']
-    Create-User -username $usersInfo['username'] -password $usersInfo['password'] -name $usersInfo['name'] -description $usersInfo['description']
-    #need to check if user should be admin
-    Make-Admin -username "xpto"
+    Create-User -username $usersInfo['username'] -password $usersInfo['password'] -name $usersInfo['name'] -description $usersInfo['description'] -admin $usersInfo['admin']
 }catch {
     Write-Error "Erro: O ficheiro de configuração de utilizadores não foi encontrado"
 }
 
 
-
-
 # 1. Ler o ficheiro de configuração
-$chocoProgramsFile = ".\lista_programas.txt"  # Substitua pelo caminho do ficheiro
+$chocoProgramsFile = ".\lista_programas.txt"
 $chocoPrograms = Get-Content -Path $chocoProgramsFile -ErrorAction Stop
 
 # 2. Verificar se o Chocolatey está instalado
-if(-not Check-Choco) {
+if(!Read-Choco) {
     Install-Choco
 }
 
