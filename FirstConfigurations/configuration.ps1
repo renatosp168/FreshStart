@@ -14,7 +14,7 @@ if (-not (Test-Admin)) {
 Write-Host "Script is running with administrator privileges."
 
 ### Define the path to the configuration file
-$ConfigFilePath = ".\conf.json"
+$ConfigFilePath = ".\config.json"
 
 # Check if the configuration file exists
 if (-Not (Test-Path $ConfigFilePath)) {
@@ -64,7 +64,7 @@ try {
     if ($lightmode -eq 0 -or $lightmode -eq 1) {
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "AppsUseLightTheme" -Value $lightmode
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "SystemUsesLightTheme" -Value $lightmode
-        Write-Host "Theme has been set to $($lightmode -eq 0 ? 'Dark Mode' : 'Light Mode')."
+        Write-Host "Theme has been set to $(if ($lightmode -eq 0) { 'Dark Mode' } else { 'Light Mode' })."
     } else {
         throw "Invalid lightmode value in the configuration file. Expected 0 or 1, but found $lightmode."
     }
@@ -373,4 +373,13 @@ try {
 
     foreach ($app in $thirdPartyBloatware) {
         Write-Host "Removing $app..."
-        Get-AppxPackage -Name $app -
+        # Remove the app for the current user
+        Get-AppxPackage -Name $app -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
+        # Remove the app for all users and prevent reinstallation
+        Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $app } | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+    }
+
+    Write-Host "Third-party bloatware apps have been removed."
+} catch {
+    Write-Host "Skipping third-party bloatware removal due to an error: $_"
+}
