@@ -2,7 +2,19 @@
     "cleanUpRecycle" : true,
     "customDirectories": [
         {
-            "path": "C:\\WINDOWS\\Temp"
+            "path": "{{systemRoot}}\\Temp"
+        },
+        {
+            "path": "{{localAPP}}\\Local\\Temp"
+        },
+        {
+            "path": "{{localAPP}}\\Microsoft\\Windows\\INetCache\\"
+        },
+        {
+            "path": "{{localAPP}}\\Microsoft\\Windows\\Temporary Internet Files"
+        },
+        {
+            "path": "{{userProfile}}\\Downloads\\"
         }
     ]
 }
