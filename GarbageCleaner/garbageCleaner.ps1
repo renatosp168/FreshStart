@@ -23,7 +23,12 @@ if (-Not (Test-Path $ConfigFilePath)) {
 
 # Read the configuration file
 try {
-    $Config = Get-Content -Path $ConfigFilePath -Raw | ConvertFrom-Json
+    $jsonTemplate = Get-Content -Path $ConfigFilePath -Raw
+    $jsonContent = $jsonTemplate -replace '{{localAPP}}', $env:LOCALAPPDATA `
+                                    -replace '{{userProfile}}', $env:USERPROFILE `
+                                    -replace '{{systemRoot}}', $env:SystemRoot
+
+    $Config =  $jsonContent | ConvertFrom-Json
 } catch {
     Write-Host "Failed to read or parse the configuration file. Please ensure it is valid JSON. Exiting script."
     exit
