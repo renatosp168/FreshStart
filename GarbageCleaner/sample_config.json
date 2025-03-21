@@ -1,0 +1,8 @@
+{
+    "cleanUpRecycle" : true,
+    "customDirectories": [
+        {
+            "path": "C:\\WINDOWS\\Temp"
+        }
+    ]
+}
